@@ -22,30 +22,68 @@ if "username" not in st.session_state:
     st.session_state.username = None
 
 if st.session_state.username is None:
-    st.title("APS — CriptoFusion")
-    st.subheader("👋 Bem-vindo! Identifique-se para iniciar a demonstração")
-    nome = st.text_input("Digite seu nome para entrar no app:")
-    entrar = st.button("Entrar")
-    if entrar and nome.strip() != "":
-        st.session_state.username = nome.strip()
-        st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
-    # Streamlit vai atualizar sozinho na próxima execução
+    st.title("Proteção Híbrida")
+    st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
 
-else:
+
+
+    st.subheader("👋 Bem-vindo! Identifique-se para iniciar a demonstração")
+    
+    st.markdown("""
+        <style>
+        div.stTextInput > label {
+            color: #c1c1c1; 
+            font-weight: bold; 
+            font-size: 16px;  
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    
+    nome = st.text_input("Digite seu nome para entrar no app:")
+
+    
+    col1, col2 = st.columns([8, 1])
+    with col1:
+        st.write("")  
+    with col2:
+        entrar = st.button("Entrar")
+
+    if entrar:
+        if nome.strip() == "":
+            st.error("Por favor, digite seu nome para continuar.")
+        else:
+            st.session_state.username = nome.strip()
+            st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
+            # Usa um placeholder para renderizar antes de recarregar
+            st.session_state._logged_in = True
+            st.rerun()
+
+# Após o rerun, garante que o login está estável
+elif st.session_state.username:
     # Sidebar com usuário e logout
     st.sidebar.write(f"👤 Usuário: **{st.session_state.username}**")
     if st.sidebar.button("🚪 Sair"):
         st.session_state.username = None
-        st.experimental_rerun()
+        st.rerun()
 
-    # Cabeçalho principal
+
+
+
+
+        # Cabeçalho principal
     st.title(f"APS — CriptoFusion (AES + RSA) — Usuário: {st.session_state.username}")
+
+    # Novo tema com HTML/CSS
+    st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
+
     st.markdown(
         """
-**Tema:** As técnicas criptográficas, conceitos, usos e aplicações — cenário: acesso restrito a navio com lixo tóxico.  
-Nesta demo o aplicativo gera a chave AES automaticamente a partir do seu nome (login) para simplificar a apresentação.
-"""
+    Implementação de segurança digital através da união entre
+    2criptografia simétrica e assimétrica.
+    """
     )
+
 
     # -----------------------
     # Geração / Persistência das chaves RSA

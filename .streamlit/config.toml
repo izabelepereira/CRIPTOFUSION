@@ -1,0 +1,6 @@
+[theme]
+primaryColor="#d6165dff"            # cor principal dos elementos interativos (botões, links)
+backgroundColor="#140c30"         # cor de fundo da página
+secondaryBackgroundColor="#2e2648" # fundo de containers e sidebars
+textColor="#fff"               # cor do texto
+font="sans serif"                  # fonte
