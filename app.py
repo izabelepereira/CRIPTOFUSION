@@ -10,25 +10,20 @@ import json
 from datetime import datetime
 import hashlib
 
-# -----------------------
+
 # Configuração da página
-# -----------------------
+
 st.set_page_config(page_title="APS — CriptoFusion (AES + RSA)", page_icon="🔒", layout="centered")
 
-# -----------------------
-# Login simples apenas com nome
-# -----------------------
+# Login
 if "username" not in st.session_state:
     st.session_state.username = None
 
 if st.session_state.username is None:
     st.title("Proteção Híbrida")
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
-
-
-
     st.subheader("👋 Bem-vindo! Identifique-se para iniciar a demonstração")
-    
+
     st.markdown("""
         <style>
         div.stTextInput > label {
@@ -39,10 +34,8 @@ if st.session_state.username is None:
         </style>
     """, unsafe_allow_html=True)
 
-    
     nome = st.text_input("Digite seu nome para entrar no app:")
 
-    
     col1, col2 = st.columns([8, 1])
     with col1:
         st.write("")  
@@ -55,48 +48,39 @@ if st.session_state.username is None:
         else:
             st.session_state.username = nome.strip()
             st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
-            # Usa um placeholder para renderizar antes de recarregar
-            st.session_state._logged_in = True
             st.rerun()
 
-# Após o rerun, garante que o login está estável
+# -----------------------
+# App principal após login
+# -----------------------
 elif st.session_state.username:
-    # Sidebar com usuário e logout
-    st.sidebar.write(f"👤 Usuário: **{st.session_state.username}**")
-    if st.sidebar.button("🚪 Sair"):
-        st.session_state.username = None
-        st.rerun()
 
-
-
-
-
-        # Cabeçalho principal
+    # Cabeçalho principal
     st.title(f"APS — CriptoFusion (AES + RSA) — Usuário: {st.session_state.username}")
 
-    # Novo tema com HTML/CSS
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
-
     st.markdown(
-        """
-    Implementação de segurança digital através da união entre
-    2criptografia simétrica e assimétrica.
-    """
+        f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>",
+        unsafe_allow_html=True
     )
 
+    st.markdown(
+        "<h6 style='color: #c1c1c1; font-weight: normal;'>Implementação de segurança digital através da união entre<br>criptografia simétrica e assimétrica.</h6>",
+        unsafe_allow_html=True
+    )
 
-    # -----------------------
+    
     # Geração / Persistência das chaves RSA
-    # -----------------------
+    
     if 'private_key' not in st.session_state:
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
         public_key = private_key.public_key()
         st.session_state['private_key'] = private_key
         st.session_state['public_key'] = public_key
 
-    # -----------------------
+    
     # Funções utilitárias
-    # -----------------------
+   
     def derive_aes_key_from_username(username: str) -> bytes:
         return hashlib.sha256(username.encode('utf-8')).digest()
 
@@ -143,18 +127,36 @@ elif st.session_state.username:
     def from_b64(s: str) -> bytes:
         return base64.b64decode(s.encode('utf-8'))
 
-    # -----------------------
+    
     # Inputs UI
-    # -----------------------
-    st.subheader("🔑 Entrada (para demonstração)")
-    with st.expander("Instruções rápidas (clique)"):
+    
+    with st.expander("Instruções rápidas"):
         st.write("""
 - Digite uma mensagem (até 128 caracteres).
 - A chave AES é gerada automaticamente a partir do seu nome (login).
 - O app faz: AES para cifrar a mensagem e RSA para cifrar a chave AES.
-- Em aula: visualize a saída em Base64 e baixe o pacote cifrado para demonstrar a transmissão segura.
+- Baixe o pacote cifrado para estudo ou demonstração.
 """)
 
+    
+    st.markdown(
+        "<h6 style='margin-bottom: -150px;'>Entrada:</h6>", 
+        unsafe_allow_html=True
+    )
+
+    
+    st.markdown(
+        """
+        <style>
+        div.stTextArea > textarea {
+            color: #c1c1c1;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Text area
     mensagem = st.text_area("Mensagem (máx 128 caracteres):", max_chars=128, height=120)
 
     # Mostra a chave derivada (preview)
@@ -163,13 +165,17 @@ elif st.session_state.username:
 
     col1, col2 = st.columns([1,1])
     with col1:
-        btn_cripto = st.button("🔒 Criptografar")
+        btn_cripto = st.button("Criptografar")
     with col2:
-        btn_decripto = st.button("🔓 Descriptografar (se houver dados)")
+        # Mostra o botão só se houver dados cifrados
+        if st.session_state.get('ct_b64'):
+            btn_decripto = st.button("Descriptografar")
+        else:
+            btn_decripto = False  # para não quebrar a lógica depois
 
-    # -----------------------
+    
     # Criptografar
-    # -----------------------
+
     if btn_cripto:
         if not mensagem:
             st.error("Por favor, digite a mensagem.")
@@ -186,8 +192,8 @@ elif st.session_state.username:
                 st.session_state['ultima_msg'] = mensagem
                 st.session_state['timestamp'] = datetime.utcnow().isoformat() + "Z"
 
-                st.success("Mensagem criptografada com sucesso ✅")
-                with st.expander("📦 Saída (pacote cifrado)"):
+                st.success("Mensagem criptografada com sucesso")
+                with st.expander("Saída (pacote cifrado)"):
                     st.markdown("**Ciphertext (AES, Base64)**")
                     st.code(st.session_state['ct_b64'], language="text")
                     st.markdown("**IV (Base64)**")
@@ -201,13 +207,12 @@ elif st.session_state.username:
                     "aes_key_encrypted": st.session_state['chave_cifrada_b64'],
                     "meta": {"timestamp_utc": st.session_state['timestamp'], "user": st.session_state.username}
                 }
-                st.download_button("⬇️ Baixar pacote cifrado (JSON)", data=json.dumps(package, ensure_ascii=False, indent=2), file_name="pacote_cifrado.json")
+                st.download_button("Baixar pacote cifrado (JSON)", data=json.dumps(package, ensure_ascii=False, indent=2), file_name="pacote_cifrado.json")
             except Exception as e:
                 st.exception(f"Erro durante a criptografia: {e}")
 
-    # -----------------------
+
     # Descriptografar
-    # -----------------------
     if btn_decripto:
         if not st.session_state.get('ct_b64'):
             st.warning("Ainda não há dados cifrados nesta sessão. Primeiro criptografe uma mensagem.")
@@ -221,11 +226,23 @@ elif st.session_state.username:
                     chave_aes_bytes = rsa_decrypt_private(st.session_state['private_key'], chave_cifrada)
                     mensagem_recuperada = aes_decrypt(ct, iv, chave_aes_bytes)
 
-                st.success("Descriptografia concluída ✅")
-                with st.expander("🔓 Resultados da descriptografia"):
+                st.success("Descriptografia concluída")
+                with st.expander("Resultados da descriptografia"):
                     st.markdown("**Chave AES recuperada (hex)**")
                     st.code(chave_aes_bytes.hex())
                     st.markdown("**Mensagem original recuperada**")
                     st.code(mensagem_recuperada)
             except Exception as e:
                 st.exception(f"Erro durante a descriptografia: {e}")
+
+
+    col1, col2 = st.columns([10, 1])
+    with col1:
+        st.write("")  
+    with col2:
+        sair = st.button("Sair")
+
+    if sair:
+        st.session_state.username = None
+        st.rerun()
+
