@@ -10,6 +10,82 @@ import json
 from datetime import datetime
 import hashlib
 
+    # Funções utilitárias
+def derive_aes_key_from_username(username: str) -> bytes:
+    return hashlib.sha256(username.encode('utf-8')).digest()        # cada usuário tem sua própria chave AES gerada automaticamente a partir no nome
+
+def aes_encrypt(msg: str, chave_aes_bytes: bytes):
+    iv = os.urandom(16)
+    cipher = Cipher(algorithms.AES(chave_aes_bytes), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    padder = padding.PKCS7(128).padder()
+    padded = padder.update(msg.encode('utf-8')) + padder.finalize()
+    ct = encryptor.update(padded) + encryptor.finalize()
+    return ct, iv
+
+def aes_decrypt(ct: bytes, iv: bytes, chave_aes_bytes: bytes) -> str:
+    cipher = Cipher(algorithms.AES(chave_aes_bytes), modes.CBC(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    padded = decryptor.update(ct) + decryptor.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    raw = unpadder.update(padded) + unpadder.finalize()
+    return raw.decode('utf-8')
+
+def rsa_encrypt_public(public_key, data: bytes) -> bytes:
+    return public_key.encrypt(
+        data,
+        asym_padding.OAEP(
+            mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+
+def rsa_decrypt_private(private_key, data: bytes) -> bytes:
+    return private_key.decrypt(
+        data,
+        asym_padding.OAEP(
+            mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+
+def b64(x: bytes) -> str:
+    return base64.b64encode(x).decode('utf-8')
+
+def from_b64(s: str) -> bytes:
+    return base64.b64decode(s.encode('utf-8'))
+
+def verificar_funcoes_cripto():         #Funcao para verificar criptografia e descriptografia 
+    print("\n=== Testando AES e RSA ===")
+
+    # Teste AES
+    chave_aes = os.urandom(32)  # chave de 256 bits
+    iv = os.urandom(16)         # vetor de inicialização
+    texto = "Mensagem secreta teste"
+
+    ct, iv = aes_encrypt(texto, chave_aes)
+    print("AES - Criptografado:", base64.b64encode(ct).decode())
+
+    texto_decriptado = aes_decrypt(ct, iv, chave_aes)
+    print("AES - Decriptado:", texto_decriptado)
+
+    # Teste RSA
+    chave_privada = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+    )
+    chave_publica = chave_privada.public_key()
+
+    mensagem = b"Mensagem com RSA teste"
+    mensagem_criptografada = rsa_encrypt_public(chave_publica, mensagem)
+    print("RSA - Criptografado:", base64.b64encode(mensagem_criptografada).decode())
+
+    mensagem_decriptada = rsa_decrypt_private(chave_privada, mensagem_criptografada)
+    print("RSA - Decriptado:", mensagem_decriptada.decode())
+
 # Configuração da página
 st.set_page_config(page_title="APS — CriptoFusion (AES + RSA)", page_icon="🔒", layout="centered")
 
@@ -73,57 +149,12 @@ elif st.session_state.username:
 
     # Geração / Persistência das chaves RSA
     if 'private_key' not in st.session_state:
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
-        public_key = private_key.public_key()
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())     #Gera uma chave RSA privada
+        public_key = private_key.public_key()       #Gera uma chave RSA publica
         st.session_state['private_key'] = private_key
         st.session_state['public_key'] = public_key
 
-    # Funções utilitárias
-    def derive_aes_key_from_username(username: str) -> bytes:
-        return hashlib.sha256(username.encode('utf-8')).digest()
 
-    def aes_encrypt(msg: str, chave_aes_bytes: bytes):
-        iv = os.urandom(16)
-        cipher = Cipher(algorithms.AES(chave_aes_bytes), modes.CBC(iv), backend=default_backend())
-        encryptor = cipher.encryptor()
-        padder = padding.PKCS7(128).padder()
-        padded = padder.update(msg.encode('utf-8')) + padder.finalize()
-        ct = encryptor.update(padded) + encryptor.finalize()
-        return ct, iv
-
-    def aes_decrypt(ct: bytes, iv: bytes, chave_aes_bytes: bytes) -> str:
-        cipher = Cipher(algorithms.AES(chave_aes_bytes), modes.CBC(iv), backend=default_backend())
-        decryptor = cipher.decryptor()
-        padded = decryptor.update(ct) + decryptor.finalize()
-        unpadder = padding.PKCS7(128).unpadder()
-        raw = unpadder.update(padded) + unpadder.finalize()
-        return raw.decode('utf-8')
-
-    def rsa_encrypt_public(public_key, data: bytes) -> bytes:
-        return public_key.encrypt(
-            data,
-            asym_padding.OAEP(
-                mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
-            )
-        )
-
-    def rsa_decrypt_private(private_key, data: bytes) -> bytes:
-        return private_key.decrypt(
-            data,
-            asym_padding.OAEP(
-                mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
-            )
-        )
-
-    def b64(x: bytes) -> str:
-        return base64.b64encode(x).decode('utf-8')
-
-    def from_b64(s: str) -> bytes:
-        return base64.b64decode(s.encode('utf-8'))
 
     # Inputs UI
     with st.expander("Instruções rápidas"):
@@ -167,7 +198,7 @@ elif st.session_state.username:
                 chave_aes_bytes = derive_aes_key_from_username(st.session_state.username)
                 with st.spinner("Criptografando (AES + RSA)..."):
                     ct, iv = aes_encrypt(mensagem, chave_aes_bytes)
-                    chave_cifrada = rsa_encrypt_public(st.session_state['public_key'], chave_aes_bytes)
+                    chave_cifrada = rsa_encrypt_public(st.session_state['public_key'], chave_aes_bytes)     #Após cifrar a mensagem com AES, o app cifra a própria chave AES com RSA
 
                 st.session_state['ct_b64'] = b64(ct)
                 st.session_state['iv_b64'] = b64(iv)
@@ -265,3 +296,7 @@ elif st.session_state.username:
     if sair:
         st.session_state.username = None
         st.rerun()
+    
+# Roda a funcao no terminal    
+if __name__ == "__main__":
+    verificar_funcoes_cripto()
