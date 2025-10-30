@@ -215,7 +215,7 @@ elif st.session_state.username:
     if st.session_state.get('mostrar_saida'):
         st.markdown("### Etapas da demonstração")
 
-        # 1️⃣ Criptografia 
+        # Criptografia 
         
         st.markdown(
             "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem criptografada (AES + RSA)</h6>",
@@ -244,7 +244,6 @@ elif st.session_state.username:
             }
         }
 
-        # Cria duas colunas para os botões lado a lado
         col1, col2 = st.columns([4,1])
         with col1:
             st.download_button(
