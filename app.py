@@ -57,7 +57,7 @@ def b64(x: bytes) -> str:
 def from_b64(s: str) -> bytes:
     return base64.b64decode(s.encode('utf-8'))
 
-def verificar_funcoes_cripto():         #Funcao para verificar criptografia e descriptografia 
+def verificar_funcoes_cripto():     #funcao para testes    #Funcao para verificar criptografia e descriptografia dos metodos AES e RSA
     print("\n=== Testando AES e RSA ===")
 
     # Teste AES
@@ -85,6 +85,40 @@ def verificar_funcoes_cripto():         #Funcao para verificar criptografia e de
 
     mensagem_decriptada = rsa_decrypt_private(chave_privada, mensagem_criptografada)
     print("RSA - Decriptado:", mensagem_decriptada.decode())
+
+def verificar_chave_AES():    #funcao para testes      #Testar se a chave AES cifrada pode ser corretamente descriptografada e usada
+    print("\n=== Testando criptografia híbrida (AES + RSA) ===")
+
+    #Gera chaves RSA
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048
+    )
+    public_key = private_key.public_key()
+
+    #Gera uma chave AES aleatória
+    chave_aes_original = os.urandom(32)  # 256 bits
+    print("Chave AES original (hex):", chave_aes_original.hex())
+
+    #Criptografa a chave AES com RSA (usando a pública)
+    chave_cifrada = rsa_encrypt_public(public_key, chave_aes_original)
+    print("\nChave AES cifrada com RSA (base64):", base64.b64encode(chave_cifrada).decode())
+
+    #Descriptografa a chave AES (usando a privada)
+    chave_aes_recuperada = rsa_decrypt_private(private_key, chave_cifrada)
+    print("\nChave AES recuperada (hex):", chave_aes_recuperada.hex())
+
+    #Verifica se é igual à original
+    if chave_aes_recuperada == chave_aes_original:
+        print("\n✅ A chave AES foi corretamente recuperada após criptografia RSA.")
+    else:
+        print("\n❌ Erro: A chave AES recuperada é diferente da original.")
+
+    #Testa se a chave recuperada realmente funciona no AES
+    msg = "chave AES pode ser descriptografada corretamente?"
+    ct, iv = aes_encrypt(msg, chave_aes_recuperada)
+    msg_recuperada = aes_decrypt(ct, iv, chave_aes_recuperada)
+    print("\nMensagem AES descriptografada:", msg_recuperada)
 
 # Configuração da página
 st.set_page_config(page_title="APS — CriptoFusion (AES + RSA)", page_icon="🔒", layout="centered")
@@ -296,6 +330,7 @@ elif st.session_state.username:
         st.session_state.username = None
         st.rerun()
     
-# Roda a funcao no terminal    
+# Roda as funcoes de teste no terminal    
 if __name__ == "__main__":
     verificar_funcoes_cripto()
+    verificar_chave_AES()
