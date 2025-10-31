@@ -1,4 +1,4 @@
-# app.py
+# ===== ISIS COMEÇA AQUI =====
 import streamlit as st
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding, hashes
@@ -30,7 +30,10 @@ def aes_decrypt(ct: bytes, iv: bytes, chave_aes_bytes: bytes) -> str:
     unpadder = padding.PKCS7(128).unpadder()
     raw = unpadder.update(padded) + unpadder.finalize()
     return raw.decode('utf-8')
+# ===== ISIS TERMINA AQUI =====
 
+
+# ===== YASMIN COMEÇA AQUI =====
 def rsa_encrypt_public(public_key, data: bytes) -> bytes:
     return public_key.encrypt(
         data,
@@ -57,7 +60,7 @@ def b64(x: bytes) -> str:
 def from_b64(s: str) -> bytes:
     return base64.b64decode(s.encode('utf-8'))
 
-def verificar_funcoes_cripto():     #funcao para testes    #Funcao para verificar criptografia e descriptografia dos metodos AES e RSA
+def verificar_funcoes_cripto():         #Funcao para verificar criptografia e descriptografia 
     print("\n=== Testando AES e RSA ===")
 
     # Teste AES
@@ -85,43 +88,24 @@ def verificar_funcoes_cripto():     #funcao para testes    #Funcao para verifica
 
     mensagem_decriptada = rsa_decrypt_private(chave_privada, mensagem_criptografada)
     print("RSA - Decriptado:", mensagem_decriptada.decode())
+# ===== YASMIN TERMINA AQUI =====
 
-def verificar_chave_AES():    #funcao para testes      #Testar se a chave AES cifrada pode ser corretamente descriptografada e usada
-    print("\n=== Testando criptografia híbrida (AES + RSA) ===")
 
-    #Gera chaves RSA
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048
-    )
-    public_key = private_key.public_key()
-
-    #Gera uma chave AES aleatória
-    chave_aes_original = os.urandom(32)  # 256 bits
-    print("Chave AES original (hex):", chave_aes_original.hex())
-
-    #Criptografa a chave AES com RSA (usando a pública)
-    chave_cifrada = rsa_encrypt_public(public_key, chave_aes_original)
-    print("\nChave AES cifrada com RSA (base64):", base64.b64encode(chave_cifrada).decode())
-
-    #Descriptografa a chave AES (usando a privada)
-    chave_aes_recuperada = rsa_decrypt_private(private_key, chave_cifrada)
-    print("\nChave AES recuperada (hex):", chave_aes_recuperada.hex())
-
-    #Verifica se é igual à original
-    if chave_aes_recuperada == chave_aes_original:
-        print("\n✅ A chave AES foi corretamente recuperada após criptografia RSA.")
-    else:
-        print("\n❌ Erro: A chave AES recuperada é diferente da original.")
-
-    #Testa se a chave recuperada realmente funciona no AES
-    msg = "chave AES pode ser descriptografada corretamente?"
-    ct, iv = aes_encrypt(msg, chave_aes_recuperada)
-    msg_recuperada = aes_decrypt(ct, iv, chave_aes_recuperada)
-    print("\nMensagem AES descriptografada:", msg_recuperada)
-
+# ===== IZA COMEÇA AQUI =====
 # Configuração da página
-st.set_page_config(page_title="APS — CriptoFusion (AES + RSA)", page_icon="🔒", layout="centered")
+st.set_page_config(
+    page_title="CriptoFusion",
+    page_icon="icon.png",
+    layout="centered"
+)
+
+st.markdown("""
+<style>
+html, body {
+    translate: no !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Login
 if "username" not in st.session_state:
@@ -157,20 +141,18 @@ if st.session_state.username is None:
             st.session_state.username = nome.strip()
             st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
             st.rerun()
+# ===== IZA TERMINA AQUI =====
 
-# -----------------------
-# App principal após login
-# -----------------------
+
+# ===== CAUÃ COMEÇA AQUI =====
 elif st.session_state.username:
 
-    # Inicializa flags
     if 'mostrar_decripto' not in st.session_state:
         st.session_state['mostrar_decripto'] = False
     if 'mostrar_saida' not in st.session_state:
         st.session_state['mostrar_saida'] = False
 
-    # Cabeçalho principal
-    st.title(f"APS — CriptoFusion (AES + RSA) — Usuário: {st.session_state.username}")
+    st.title(f"CriptoFusion - Proteção Híbrida")
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
     st.markdown(
         f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>",
@@ -181,16 +163,12 @@ elif st.session_state.username:
         unsafe_allow_html=True
     )
 
-    # Geração / Persistência das chaves RSA
     if 'private_key' not in st.session_state:
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())     #Gera uma chave RSA privada
-        public_key = private_key.public_key()       #Gera uma chave RSA publica
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+        public_key = private_key.public_key()
         st.session_state['private_key'] = private_key
         st.session_state['public_key'] = public_key
 
-
-
-    # Inputs UI
     with st.expander("Instruções rápidas"):
         st.write("""
 - Digite uma mensagem (até 128 caracteres).
@@ -210,20 +188,15 @@ elif st.session_state.username:
 
     mensagem = st.text_area("Mensagem (máx 128 caracteres):", max_chars=128, height=120)
 
-    # Preview da chave derivada
     chave_derived_preview = hashlib.sha256(st.session_state.username.encode('utf-8')).hexdigest()[:24]
     st.info(f"Chave AES derivada (preview): {chave_derived_preview}... (gerada a partir do seu nome)")
 
-       # Botões
     col1, col2 = st.columns([1,1])
     with col1:
         btn_cripto = st.button("Criptografar")
     with col2:
-        st.write("")  # coluna vazia, sem botão de descriptografar
+        st.write("")
 
-
-
-    # Criptografar
     if btn_cripto:
         if not mensagem:
             st.error("Por favor, digite a mensagem.")
@@ -232,7 +205,7 @@ elif st.session_state.username:
                 chave_aes_bytes = derive_aes_key_from_username(st.session_state.username)
                 with st.spinner("Criptografando (AES + RSA)..."):
                     ct, iv = aes_encrypt(mensagem, chave_aes_bytes)
-                    chave_cifrada = rsa_encrypt_public(st.session_state['public_key'], chave_aes_bytes)     #Após cifrar a mensagem com AES, o app cifra a própria chave AES com RSA
+                    chave_cifrada = rsa_encrypt_public(st.session_state['public_key'], chave_aes_bytes)
 
                 st.session_state['ct_b64'] = b64(ct)
                 st.session_state['iv_b64'] = b64(iv)
@@ -245,18 +218,13 @@ elif st.session_state.username:
             except Exception as e:
                 st.exception(f"Erro durante a criptografia: {e}")
 
-    # Etapas da demonstração (apenas após criptografar)
     if st.session_state.get('mostrar_saida'):
         st.markdown("### Etapas da demonstração")
 
-        # Criptografia 
-        
         st.markdown(
             "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem criptografada (AES + RSA)</h6>",
             unsafe_allow_html=True
         )
-
-
 
         if st.session_state.get('ct_b64') and not st.session_state.get('mostrar_decripto'):
             st.success("Mensagem criptografada com sucesso")
@@ -288,13 +256,6 @@ elif st.session_state.username:
         with col2:
             btn_decripto = st.button("Descriptografar", key="descripto_pacote")
 
-
-
-        # 2️⃣ Descriptografia
-        st.markdown(
-            "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem Descriptografada </h6>",
-            unsafe_allow_html=True
-        )
         if btn_decripto:
             if not st.session_state.get('ct_b64'):
                 st.warning("Ainda não há dados cifrados nesta sessão. Primeiro criptografe uma mensagem.")
@@ -311,6 +272,11 @@ elif st.session_state.username:
                     st.session_state['mostrar_saida'] = False
                     st.session_state['mostrar_decripto'] = True
 
+                    st.markdown(
+                        "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem Descriptografada </h6>",
+                        unsafe_allow_html=True
+                    )
+
                     with st.expander("Resultados da descriptografia"):
                         st.markdown("**Chave AES recuperada (hex)**")
                         st.code(chave_aes_bytes.hex())
@@ -319,8 +285,6 @@ elif st.session_state.username:
                 except Exception as e:
                     st.exception(f"Erro durante a descriptografia: {e}")
 
-
-    # Botão de sair
     col1, col2 = st.columns([10, 1])
     with col1:
         st.write("")  
@@ -329,8 +293,9 @@ elif st.session_state.username:
     if sair:
         st.session_state.username = None
         st.rerun()
-    
-# Roda as funcoes de teste no terminal    
+# ===== CAUÃ TERMINA AQUI =====
+
+
+# Roda a funcao no terminal    
 if __name__ == "__main__":
     verificar_funcoes_cripto()
-    verificar_chave_AES()
