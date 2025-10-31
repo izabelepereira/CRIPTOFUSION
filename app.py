@@ -10,9 +10,10 @@ import json
 from datetime import datetime
 import hashlib
 
-    # Funções utilitárias
+# Funções utilitárias
 def derive_aes_key_from_username(username: str) -> bytes:
-    return hashlib.sha256(username.encode('utf-8')).digest()        # cada usuário tem sua própria chave AES gerada automaticamente a partir no nome
+    """Cada usuário tem sua própria chave AES gerada automaticamente a partir do nome"""
+    return hashlib.sha256(username.encode('utf-8')).digest()
 
 def aes_encrypt(msg: str, chave_aes_bytes: bytes):
     iv = os.urandom(16)
@@ -30,6 +31,15 @@ def aes_decrypt(ct: bytes, iv: bytes, chave_aes_bytes: bytes) -> str:
     unpadder = padding.PKCS7(128).unpadder()
     raw = unpadder.update(padded) + unpadder.finalize()
     return raw.decode('utf-8')
+
+# Função segura para rerun em qualquer versão do Streamlit
+def safe_rerun():
+    if hasattr(st, "rerun"):
+        st.rerun()
+    elif hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+    else:
+        raise RuntimeError("Nenhum método de rerun disponível no Streamlit")
 # ===== ISIS TERMINA AQUI =====
 
 
@@ -60,44 +70,27 @@ def b64(x: bytes) -> str:
 def from_b64(s: str) -> bytes:
     return base64.b64decode(s.encode('utf-8'))
 
-def verificar_funcoes_cripto():         #Funcao para verificar criptografia e descriptografia 
+def verificar_funcoes_cripto():         
     print("\n=== Testando AES e RSA ===")
-
     # Teste AES
-    chave_aes = os.urandom(32)  # chave de 256 bits
-    iv = os.urandom(16)         # vetor de inicialização
+    chave_aes = os.urandom(32)
+    iv = os.urandom(16)
     texto = "Mensagem secreta teste"
-
     ct, iv = aes_encrypt(texto, chave_aes)
     print("AES - Criptografado:", base64.b64encode(ct).decode())
-
-    texto_decriptado = aes_decrypt(ct, iv, chave_aes)
-    print("AES - Decriptado:", texto_decriptado)
-
+    print("AES - Decriptado:", aes_decrypt(ct, iv, chave_aes))
     # Teste RSA
-    chave_privada = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
+    chave_privada = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
     chave_publica = chave_privada.public_key()
-
     mensagem = b"Mensagem com RSA teste"
     mensagem_criptografada = rsa_encrypt_public(chave_publica, mensagem)
     print("RSA - Criptografado:", base64.b64encode(mensagem_criptografada).decode())
-
-    mensagem_decriptada = rsa_decrypt_private(chave_privada, mensagem_criptografada)
-    print("RSA - Decriptado:", mensagem_decriptada.decode())
+    print("RSA - Decriptado:", rsa_decrypt_private(chave_privada, mensagem_criptografada).decode())
 # ===== YASMIN TERMINA AQUI =====
 
 
 # ===== IZA COMEÇA AQUI =====
-# Configuração da página
-st.set_page_config(
-    page_title="CriptoFusion",
-    page_icon="icon.png",
-    layout="centered"
-)
+st.set_page_config(page_title="CriptoFusion", page_icon="icon.png", layout="centered")
 
 st.markdown("""
 <style>
@@ -129,10 +122,8 @@ if st.session_state.username is None:
     nome = st.text_input("Digite seu nome para entrar no app:")
 
     col1, col2 = st.columns([8, 1])
-    with col1:
-        st.write("")  
-    with col2:
-        entrar = st.button("Entrar")
+    with col1: st.write("")  
+    with col2: entrar = st.button("Entrar")
 
     if entrar:
         if nome.strip() == "":
@@ -140,34 +131,25 @@ if st.session_state.username is None:
         else:
             st.session_state.username = nome.strip()
             st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
-            st.rerun()
+            safe_rerun()
 # ===== IZA TERMINA AQUI =====
 
 
 # ===== CAUÃ COMEÇA AQUI =====
 elif st.session_state.username:
 
-    if 'mostrar_decripto' not in st.session_state:
-        st.session_state['mostrar_decripto'] = False
-    if 'mostrar_saida' not in st.session_state:
-        st.session_state['mostrar_saida'] = False
+    if 'mostrar_decripto' not in st.session_state: st.session_state['mostrar_decripto'] = False
+    if 'mostrar_saida' not in st.session_state: st.session_state['mostrar_saida'] = False
 
     st.title(f"CriptoFusion - Proteção Híbrida")
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
-    st.markdown(
-        f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>",
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        "<h6 style='color: #c1c1c1; font-weight: normal;'>Implementação de segurança digital através da união entre<br>criptografia simétrica e assimétrica.</h6>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>", unsafe_allow_html=True)
+    st.markdown("<h6 style='color: #c1c1c1; font-weight: normal;'>Implementação de segurança digital através da união entre<br>criptografia simétrica e assimétrica.</h6>", unsafe_allow_html=True)
 
     if 'private_key' not in st.session_state:
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
-        public_key = private_key.public_key()
         st.session_state['private_key'] = private_key
-        st.session_state['public_key'] = public_key
+        st.session_state['public_key'] = private_key.public_key()
 
     with st.expander("Instruções rápidas"):
         st.write("""
@@ -180,22 +162,17 @@ elif st.session_state.username:
     st.markdown("<h6 style='margin-bottom: -150px;'>Entrada:</h6>", unsafe_allow_html=True)
     st.markdown("""
         <style>
-        div.stTextArea > textarea {
-            color: #c1c1c1;
-        }
+        div.stTextArea > textarea { color: #c1c1c1; }
         </style>
     """, unsafe_allow_html=True)
 
     mensagem = st.text_area("Mensagem (máx 128 caracteres):", max_chars=128, height=120)
-
     chave_derived_preview = hashlib.sha256(st.session_state.username.encode('utf-8')).hexdigest()[:24]
     st.info(f"Chave AES derivada (preview): {chave_derived_preview}... (gerada a partir do seu nome)")
 
     col1, col2 = st.columns([1,1])
-    with col1:
-        btn_cripto = st.button("Criptografar")
-    with col2:
-        st.write("")
+    with col1: btn_cripto = st.button("Criptografar")
+    with col2: st.write("")
 
     if btn_cripto:
         if not mensagem:
@@ -214,20 +191,17 @@ elif st.session_state.username:
                 st.session_state['timestamp'] = datetime.utcnow().isoformat() + "Z"
                 st.session_state['mostrar_saida'] = True
                 st.session_state['mostrar_decripto'] = False
-                st.rerun()
+                safe_rerun()
             except Exception as e:
                 st.exception(f"Erro durante a criptografia: {e}")
 
     if st.session_state.get('mostrar_saida'):
         st.markdown("### Etapas da demonstração")
-
-        st.markdown(
-            "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem criptografada (AES + RSA)</h6>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem criptografada (AES + RSA)</h6>", unsafe_allow_html=True)
 
         if st.session_state.get('ct_b64') and not st.session_state.get('mostrar_decripto'):
             st.success("Mensagem criptografada com sucesso")
+
         with st.expander("Saída (pacote cifrado)"):
             st.markdown("**Ciphertext (AES, Base64)**")
             st.code(st.session_state['ct_b64'], language="text")
@@ -248,11 +222,7 @@ elif st.session_state.username:
 
         col1, col2 = st.columns([4,1])
         with col1:
-            st.download_button(
-                "Baixar pacote cifrado (JSON)",
-                data=json.dumps(package, ensure_ascii=False, indent=2),
-                file_name="pacote_cifrado.json"
-            )
+            st.download_button("Baixar pacote cifrado (JSON)", data=json.dumps(package, ensure_ascii=False, indent=2), file_name="pacote_cifrado.json")
         with col2:
             btn_decripto = st.button("Descriptografar", key="descripto_pacote")
 
@@ -272,10 +242,7 @@ elif st.session_state.username:
                     st.session_state['mostrar_saida'] = False
                     st.session_state['mostrar_decripto'] = True
 
-                    st.markdown(
-                        "<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem Descriptografada </h6>",
-                        unsafe_allow_html=True
-                    )
+                    st.markdown("<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem Descriptografada </h6>", unsafe_allow_html=True)
 
                     with st.expander("Resultados da descriptografia"):
                         st.markdown("**Chave AES recuperada (hex)**")
@@ -286,16 +253,14 @@ elif st.session_state.username:
                     st.exception(f"Erro durante a descriptografia: {e}")
 
     col1, col2 = st.columns([10, 1])
-    with col1:
-        st.write("")  
-    with col2:
-        sair = st.button("Sair")
+    with col1: st.write("")  
+    with col2: sair = st.button("Sair")
     if sair:
         st.session_state.username = None
-        st.rerun()
+        safe_rerun()
 # ===== CAUÃ TERMINA AQUI =====
 
 
-# Roda a funcao no terminal    
+# Roda a função no terminal
 if __name__ == "__main__":
     verificar_funcoes_cripto()
