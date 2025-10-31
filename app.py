@@ -107,7 +107,7 @@ if "username" not in st.session_state:
 if st.session_state.username is None:
     st.title("Proteção Híbrida")
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
-    st.subheader("👋 Bem-vindo! Identifique-se para iniciar a demonstração")
+    st.subheader("👋 Bem-vindo! Antes de começar, digite seu nome para gerar uma chave única e iniciar a demonstração.")
 
     st.markdown("""
         <style>
