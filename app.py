@@ -144,7 +144,31 @@ elif st.session_state.username:
     st.title(f"CriptoFusion - Proteção Híbrida")
     st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
     st.markdown(f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>", unsafe_allow_html=True)
-    st.markdown("<h6 style='color: #c1c1c1; font-weight: normal;'>Implementação de segurança digital através da união entre<br>criptografia simétrica e assimétrica.</h6>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='
+        border: 1.5px solid #c1c1c1; 
+        background-color: rgba(0, 0, 0, 0); 
+        padding: 10px 15px; 
+        border-radius: 10px; 
+        margin-top: 10px; 
+        margin-bottom: 20px;
+    '>
+        <p style='color:#c1c1c1; margin:0;'>
+            💡 <strong>O que é criptografia híbrida?</strong><br>
+            É uma forma de proteger informações usando <strong>dois tipos de segurança ao mesmo tempo</strong>:<br><br>
+            <span style='color:#c1c1c1;'>&#8226;</span> <strong>AES (simétrica)</strong> — funciona como uma <em>senha</em> que protege a mensagem.<br>
+            <span style='color:#c1c1c1;'>&#8226;</span> <strong>RSA (assimétrica)</strong> — funciona como um <em>cadeado com duas chaves</em>, usado para proteger essa senha.<br><br>
+            Juntas, elas tornam a comunicação <strong>mais rápida e muito mais segura</strong>, unindo <strong>velocidade e proteção</strong>.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <p style='color:#c1c1c1; text-align:left; margin-bottom:10px; font-size:16px;'>
+    <em>Clique abaixo para seguir as instruções.</em>
+    </p>
+    """, unsafe_allow_html=True)
+
 
     if 'private_key' not in st.session_state:
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
@@ -159,16 +183,49 @@ elif st.session_state.username:
 - Baixe o pacote cifrado para estudo ou demonstração.
 """)
 
-    st.markdown("<h6 style='margin-bottom: -150px;'>Entrada:</h6>", unsafe_allow_html=True)
+    st.markdown("<h4 style='margin-bottom: -150px;'>Entrada:</h4>", unsafe_allow_html=True)
     st.markdown("""
         <style>
         div.stTextArea > textarea { color: #c1c1c1; }
         </style>
     """, unsafe_allow_html=True)
 
-    mensagem = st.text_area("Mensagem (máx 128 caracteres):", max_chars=128, height=120)
+    st.markdown("""
+    <style>
+    div[data-baseweb="textarea"] > label {
+        color: #c1c1c1 !important;
+        font-size: 14px;
+        margin-bottom: 0px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    mensagem = st.text_area("Digite a mensagem que você quer proteger (ex: 'Oi, esse é um teste'):", 
+                            max_chars=128, height=120)
+
+
     chave_derived_preview = hashlib.sha256(st.session_state.username.encode('utf-8')).hexdigest()[:24]
-    st.info(f"Chave AES derivada (preview): {chave_derived_preview}... (gerada a partir do seu nome)")
+    st.markdown(f"""
+    <div style='color:#FFFFFF; margin-top:5px; font-size:14px;'>
+        <span style='color:#FFF;' </span> Esta é a chave que será usada para proteger sua mensagem. (foi gerada a partir do seu login)
+    </div>
+    """, unsafe_allow_html=True)
+
+    chave_derived_preview = hashlib.sha256(st.session_state.username.encode('utf-8')).hexdigest()[:24]
+
+    st.markdown(f"""
+    <div style='
+        background-color:#2e2648; 
+        color:#c1c1c1; 
+        padding:10px 15px; 
+        border-radius:5px; 
+        font-size:14px;
+        margin-top:5px;
+        margin-bottom:15px;
+    '>
+        Chave AES derivada (preview): <strong>{chave_derived_preview}...</strong> (gerada a partir do seu nome)
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([1,1])
     with col1: btn_cripto = st.button("Criptografar")
@@ -197,18 +254,27 @@ elif st.session_state.username:
 
     if st.session_state.get('mostrar_saida'):
         st.markdown("### Etapas da demonstração")
-        st.markdown("<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem criptografada (AES + RSA)</h6>", unsafe_allow_html=True)
+        st.markdown("""
+        <p style='color:#c1c1c1; margin-bottom:10px;'>
+            &#9679; Sua mensagem foi protegida com sucesso. Você pode baixar o pacote ou ver os detalhes abaixo.
+        </p>
+        """, unsafe_allow_html=True)
+
+
 
         if st.session_state.get('ct_b64') and not st.session_state.get('mostrar_decripto'):
-            st.success("Mensagem criptografada com sucesso")
+            st.success("Mensagem criptografada com sucesso!")
 
         with st.expander("Saída (pacote cifrado)"):
-            st.markdown("**Ciphertext (AES, Base64)**")
+            st.markdown("**Ciphertext (AES, Base64)** — Mensagem criptografada")
             st.code(st.session_state['ct_b64'], language="text")
-            st.markdown("**IV (Base64)**")
+            
+            st.markdown("**IV (Base64)** — Número aleatório usado na criptografia")
             st.code(st.session_state['iv_b64'], language="text")
-            st.markdown("**Chave AES cifrada com RSA (Base64)**")
+            
+            st.markdown("**Chave AES cifrada com RSA (Base64)** — Chave que protege sua mensagem, agora protegida pelo RSA")
             st.code(st.session_state['chave_cifrada_b64'], language="text")
+
 
         package = {
             "ciphertext": st.session_state['ct_b64'],
@@ -238,16 +304,16 @@ elif st.session_state.username:
                         chave_aes_bytes = rsa_decrypt_private(st.session_state['private_key'], chave_cifrada)
                         mensagem_recuperada = aes_decrypt(ct, iv, chave_aes_bytes)
 
-                    st.success("Descriptografia concluída")
+                    st.success("Descriptografia concluída com sucesso!")
                     st.session_state['mostrar_saida'] = False
                     st.session_state['mostrar_decripto'] = True
 
-                    st.markdown("<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Mensagem Descriptografada </h6>", unsafe_allow_html=True)
+                    st.markdown("<h6 style='margin-bottom:10px; padding:0; color: #c1c1c1; font-weight: normal;'>&#9679; Sua mensagem foi descriptografada. Veja os detalhes abaixo, se desejar. </h6>", unsafe_allow_html=True)
 
                     with st.expander("Resultados da descriptografia"):
-                        st.markdown("**Chave AES recuperada (hex)**")
+                        st.markdown("**Chave de segurança da mensagem (para referência técnica)**")
                         st.code(chave_aes_bytes.hex())
-                        st.markdown("**Mensagem original recuperada**")
+                        st.markdown("**Mensagem original que você digitou**")
                         st.code(mensagem_recuperada)
                 except Exception as e:
                     st.exception(f"Erro durante a descriptografia: {e}")
