@@ -37,7 +37,7 @@ def safe_rerun():
     if hasattr(st, "rerun"):
         st.rerun()
     elif hasattr(st, "experimental_rerun"):
-        st.experimental_rerun()
+        safe_rerun()
     else:
         raise RuntimeError("Nenhum método de rerun disponível no Streamlit")
 # ===== ISIS TERMINA AQUI =====
