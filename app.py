@@ -146,22 +146,22 @@ elif st.session_state.username:
     st.markdown(f"<p style='margin-top:-10px; color: #fff;'>Bem-vindo(a) <strong>{st.session_state.username}!</strong></p>", unsafe_allow_html=True)
     st.markdown("""
     <div style='
-        border: 1.5px solid #c1c1c1; 
-        background-color: rgba(0, 0, 0, 0); 
-        padding: 10px 15px; 
+        padding: 12px 15px; 
         border-radius: 10px; 
         margin-top: 10px; 
         margin-bottom: 20px;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #c1c1c1;
+        text-align: left;
     '>
-        <p style='color:#c1c1c1; margin:0;'>
-            💡 <strong>O que é criptografia híbrida?</strong><br>
-            É uma forma de proteger informações usando <strong>dois tipos de segurança ao mesmo tempo</strong>:<br><br>
-            <span style='color:#c1c1c1;'>&#8226;</span> <strong>AES (simétrica)</strong> — funciona como uma <em>senha</em> que protege a mensagem.<br>
-            <span style='color:#c1c1c1;'>&#8226;</span> <strong>RSA (assimétrica)</strong> — funciona como um <em>cadeado com duas chaves</em>, usado para proteger essa senha.<br><br>
-            Juntas, elas tornam a comunicação <strong>mais rápida e muito mais segura</strong>, unindo <strong>velocidade e proteção</strong>.
-        </p>
+        💡 <strong> O que é criptografia híbrida?</strong><br>
+        Combina dois tipos de segurança:<br>
+        • <strong>AES</strong> — protege a mensagem como uma senha.<br>
+        • <strong>RSA</strong> — protege a senha como um cadeado de duas chaves.<br>
+        <em>Rápida e muito segura.<em>
     </div>
     """, unsafe_allow_html=True)
+
 
     st.markdown("""
     <p style='color:#c1c1c1; text-align:left; margin-bottom:10px; font-size:16px;'>
