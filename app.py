@@ -1,4 +1,3 @@
-# ===== ISIS COMEÇA AQUI =====
 import streamlit as st
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding, hashes
@@ -10,7 +9,7 @@ import json
 from datetime import datetime
 import hashlib
 
-# Funções utilitárias
+
 def derive_aes_key_from_username(username: str) -> bytes:
     """Cada usuário tem sua própria chave AES gerada automaticamente a partir do nome"""
     return hashlib.sha256(username.encode('utf-8')).digest()
@@ -32,18 +31,16 @@ def aes_decrypt(ct: bytes, iv: bytes, chave_aes_bytes: bytes) -> str:
     raw = unpadder.update(padded) + unpadder.finalize()
     return raw.decode('utf-8')
 
-# Função segura para rerun em qualquer versão do Streamlit
 def safe_rerun():
     if hasattr(st, "rerun"):
         st.rerun()
     elif hasattr(st, "experimental_rerun"):
-        st.experimental_rerun()  # corrigido aqui
+        st.experimental_rerun() 
     else:
         raise RuntimeError("Nenhum método de rerun disponível no Streamlit")
-# ===== ISIS TERMINA AQUI =====
+    
 
 
-# ===== YASMIN COMEÇA AQUI =====
 def rsa_encrypt_public(public_key, data: bytes) -> bytes:
     return public_key.encrypt(
         data,
@@ -72,24 +69,25 @@ def from_b64(s: str) -> bytes:
 
 def verificar_funcoes_cripto():         
     print("\n=== Testando AES e RSA ===")
-    # Teste AES
+ 
     chave_aes = os.urandom(32)
     iv = os.urandom(16)
     texto = "Mensagem secreta teste"
     ct, iv = aes_encrypt(texto, chave_aes)
     print("AES - Criptografado:", base64.b64encode(ct).decode())
     print("AES - Decriptado:", aes_decrypt(ct, iv, chave_aes))
-    # Teste RSA
+
     chave_privada = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
     chave_publica = chave_privada.public_key()
     mensagem = b"Mensagem com RSA teste"
     mensagem_criptografada = rsa_encrypt_public(chave_publica, mensagem)
     print("RSA - Criptografado:", base64.b64encode(mensagem_criptografada).decode())
     print("RSA - Decriptado:", rsa_decrypt_private(chave_privada, mensagem_criptografada).decode())
-# ===== YASMIN TERMINA AQUI =====
+    
 
 
-# ===== IZA COMEÇA AQUI =====
+
+
 st.set_page_config(page_title="CriptoFusion", page_icon="icon.png", layout="centered")
 
 st.markdown("""
@@ -101,12 +99,14 @@ html, body {
 """, unsafe_allow_html=True)
 
 # Login
+
 if "username" not in st.session_state:
     st.session_state.username = None
 
 if st.session_state.username is None:
     st.title("Proteção Híbrida")
-    st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", unsafe_allow_html=True)
+    st.markdown("<h5 style='margin-top:-20px; font-weight: normal;'>Segurança Digital Avançada: AES & RSA</h5>", 
+    unsafe_allow_html=True)
     st.subheader("👋 Bem-vindo! Identifique-se para iniciar a demonstração.")
 
     st.markdown("""
@@ -132,10 +132,8 @@ if st.session_state.username is None:
             st.session_state.username = nome.strip()
             st.success(f"Olá, {st.session_state.username}! Bem-vindo(a).")
             safe_rerun()
-# ===== IZA TERMINA AQUI =====
+            
 
-
-# ===== CAUÃ COMEÇA AQUI =====
 elif st.session_state.username:
 
     if 'mostrar_decripto' not in st.session_state: st.session_state['mostrar_decripto'] = False
@@ -171,7 +169,8 @@ elif st.session_state.username:
 
 
     if 'private_key' not in st.session_state:
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, 
+        backend=default_backend())
         st.session_state['private_key'] = private_key
         st.session_state['public_key'] = private_key.public_key()
 
@@ -324,9 +323,6 @@ elif st.session_state.username:
     if sair:
         st.session_state.username = None
         safe_rerun()
-# ===== CAUÃ TERMINA AQUI =====
 
-
-# Roda a função no terminal
 if __name__ == "__main__":
     verificar_funcoes_cripto()
